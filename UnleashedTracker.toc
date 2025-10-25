@@ -1,0 +1,6 @@
+## Interface: 11200
+## Title: Unleashed Potential Tracker
+## Author: ChatGPT
+## Version: 1.0
+## SavedVariables: UnleashedPotentialDB
+UnleashedTracker.lua
