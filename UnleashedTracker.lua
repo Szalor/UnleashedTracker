@@ -1,6 +1,21 @@
 local _, class = UnitClass("player")
 if class ~= "WARLOCK" then return end
 
+-- Function to check if Unleashed Potential is talented
+local function HasUnleashedPotential()
+    local numTabs = GetNumTalentTabs()
+    for t = 1, numTabs do
+        local numTalents = GetNumTalents(t)
+        for i = 1, numTalents do
+            local name, iconTexture, tier, column, rank, maxRank = GetTalentInfo(t, i)
+            if name == "Unleashed Potential" and rank > 0 then
+                return true
+            end
+        end
+    end
+    return false
+end
+
 --------------------------------------------------
 --  STATE
 --------------------------------------------------
@@ -56,11 +71,12 @@ local function UpdateDisplay()
         icon:Show()
         stackText:SetText(tostring(currentStacks))  -- show only number
         stackText:Show()
+		timerText:Show()
     else
         icon:SetDesaturated(true)
         icon:Hide()
-        stackText:Hide()  -- hide text when stacks are 0
-        timerText:SetText("")
+        stackText:Hide()
+        timerText:Hide()
     end
 end
 
@@ -187,6 +203,8 @@ end)
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("CHAT_MSG_SPELL_SELF_DAMAGE")
 frame:RegisterEvent("UNIT_AURA")
+frame:RegisterEvent("PLAYER_TALENT_UPDATE")
+frame:RegisterEvent("CHARACTER_POINTS_CHANGED")
 frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 
 local function CheckFunnel()
@@ -218,19 +236,23 @@ local function CheckFunnel()
 end
 
 frame:SetScript("OnEvent", function(self, event)
-	local msg = arg1
-    if not msg then return end
-
-    -- 🟣 Critical spell hit refresh/increment
-    if string.find(msg, "^Your .- crits ") then
-        if currentStacks < 3 then
-            currentStacks = currentStacks + 1
-        end
-        ActivateOrRefreshUP(currentStacks)
-        return
-    end
-	
-    CheckFunnel()
+	if HasUnleashedPotential() and UnitExists("pet") then
+		local msg = arg1
+		if not msg then return end
+		-- 🟣 Critical spell hit refresh/increment
+		if string.find(msg, "^Your .- crits ") then
+			if currentStacks < 3 then
+				currentStacks = currentStacks + 1
+			end
+			ActivateOrRefreshUP(currentStacks)
+			return
+		end
+		
+		CheckFunnel()
+	else
+		currentStacks = 0
+		UpdateDisplay()
+	end
 end)
 
 --------------------------------------------------

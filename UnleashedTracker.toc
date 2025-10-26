@@ -1,6 +1,6 @@
 ## Interface: 11200
 ## Title: Unleashed Potential Tracker
-## Author: ChatGPT
+## Author: Molov
 ## Version: 1.0
 ## SavedVariables: UnleashedPotentialDB
 UnleashedTracker.lua
