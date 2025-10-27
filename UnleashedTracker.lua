@@ -74,7 +74,7 @@ local function UpdateDisplay()
 		timerText:Show()
     else
         icon:SetDesaturated(true)
-        icon:Hide()
+		if iconLocked then icon:Hide() end
         stackText:Hide()
         timerText:Hide()
     end
@@ -179,6 +179,11 @@ SlashCmdList["LOCKUP"] = function()
 	warningFrame:EnableMouse(not iconLocked)
     warningFrame:SetMovable(not iconLocked)
 	warningFrame:EnableMouseWheel(not iconLocked)
+	if iconLocked then
+		icon:Hide()
+	else
+		icon:Show()
+	end
     Save()
 	
     if iconLocked then
