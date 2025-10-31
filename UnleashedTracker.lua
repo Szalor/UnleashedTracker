@@ -206,10 +206,12 @@ end)
 --  LOGIC FRAME (EVENTS)
 --------------------------------------------------
 local frame = CreateFrame("Frame")
-frame:RegisterEvent("CHAT_MSG_SPELL_SELF_DAMAGE")
 frame:RegisterEvent("UNIT_AURA")
 frame:RegisterEvent("PLAYER_TALENT_UPDATE")
 frame:RegisterEvent("CHARACTER_POINTS_CHANGED")
+frame:RegisterEvent("CHAT_MSG_SPELL_SELF_DAMAGE")
+frame:RegisterEvent("UNIT_PET")
+frame:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_SELF_BUFFS")
 frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 
 local function CheckFunnel()
@@ -240,15 +242,20 @@ local function CheckFunnel()
     end
 end
 
-frame:SetScript("OnEvent", function(self, event)
-	if HasUnleashedPotential() and UnitExists("pet") then
+frame:SetScript("OnEvent", function()
+	if HasUnleashedPotential() and UnitExists("pet") and not UnitIsDead("pet") and UnitName("pet")~="Unknown" then
 		local msg = arg1
 		if not msg then return end
-		-- 🟣 Critical spell hit refresh/increment
-		if string.find(msg, "^Your .- crits ") then
-			if currentStacks < 3 then
-				currentStacks = currentStacks + 1
-			end
+		
+		-- rely on logs to gain an accurate number of UP stacks
+		local s, e, demonName, warlockName, stacks = string.find(msg, "(.+)%s%((.+)%) gains Unleashed Potential %((%d)%)")
+		if s and warlockName == playerName and stacks then
+			ActivateOrRefreshUP(stacks)
+			return
+		end
+		
+		-- 🟣 Critical spell hit refresh once already at 3 stacks and no more logs
+		if string.find(msg, "^Your .- crits ") and not string.find(msg, "Shoot") then
 			ActivateOrRefreshUP(currentStacks)
 			return
 		end
