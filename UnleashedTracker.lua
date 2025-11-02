@@ -206,11 +206,11 @@ end)
 --  LOGIC FRAME (EVENTS)
 --------------------------------------------------
 local frame = CreateFrame("Frame")
-frame:RegisterEvent("UNIT_AURA")
 frame:RegisterEvent("PLAYER_TALENT_UPDATE")
 frame:RegisterEvent("CHARACTER_POINTS_CHANGED")
 frame:RegisterEvent("CHAT_MSG_SPELL_SELF_DAMAGE")
 frame:RegisterEvent("UNIT_PET")
+frame:RegisterEvent("UNIT_AURA") -- needed for funnels' stop channel detection
 frame:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_SELF_BUFFS")
 frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 
@@ -247,20 +247,24 @@ frame:SetScript("OnEvent", function()
 		local msg = arg1
 		if not msg then return end
 		
-		-- rely on logs to gain an accurate number of UP stacks
-		local s, e, demonName, warlockName, stacks = string.find(msg, "(.+)%s%((.+)%) gains Unleashed Potential %((%d)%)")
-		if s and warlockName == playerName and stacks then
-			ActivateOrRefreshUP(stacks)
-			return
+		if event == "CHAT_MSG_SPELL_PERIODIC_SELF_BUFFS" then 
+			-- rely on logs to gain an accurate number of UP stacks
+			local s, e, demonName, warlockName, stacks = string.find(msg, "(.+)%s%((.+)%) gains Unleashed Potential %((%d)%)")
+			if s and warlockName == playerName and stacks then
+				ActivateOrRefreshUP(stacks)
+				return
+			end
 		end
 		
 		-- 🟣 Critical spell hit refresh once already at 3 stacks and no more logs
-		if string.find(msg, "^Your .- crits ") and not string.find(msg, "Shoot") then
+		if event == "CHAT_MSG_SPELL_SELF_DAMAGE" and string.find(msg, "^Your .- crits ") and not string.find(msg, "Shoot") then
 			ActivateOrRefreshUP(currentStacks)
 			return
 		end
 		
-		CheckFunnel()
+		if event == "UNIT_AURA" and msg == "pet" then
+			CheckFunnel() 
+		end
 	else
 		currentStacks = 0
 		UpdateDisplay()
@@ -270,7 +274,7 @@ end)
 --------------------------------------------------
 --  ONUPDATE TIMER (text countdown)
 --------------------------------------------------
-warningFrame:SetScript("OnUpdate", function(self)
+warningFrame:SetScript("OnUpdate", function()
     if timerActive then
         upTimer = upTimer - arg1 -- arg1 is delta time in 1.12/SuperWoW
         if upTimer > 0 then
