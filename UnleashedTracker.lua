@@ -215,7 +215,7 @@ frame:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_SELF_BUFFS")
 frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 
 local function CheckFunnel()
-    if not UnitExists("pet") or UnitIsDead("pet") then
+    if not UnitExists("pet") or UnitIsDead("pet") or currentStacks==0 then
         funnelActive = false
         return
     end
@@ -230,15 +230,10 @@ local function CheckFunnel()
     end
 
     if funnelFound then
-        if not funnelActive then
-            funnelActive = true
-            funnelTickElapsed = 0
-        end
+		funnelActive = true
     else
-        if funnelActive then
-            funnelActive = false
-            funnelTickElapsed = 0
-        end
+		funnelActive = false
+		funnelTickElapsed = 0
     end
 end
 
@@ -282,8 +277,6 @@ warningFrame:SetScript("OnUpdate", function()
         else
             currentStacks = 0
             timerActive = false
-            upTimer = 0
-            timerText:SetText("")
             UpdateDisplay()
         end
     end
@@ -292,9 +285,7 @@ warningFrame:SetScript("OnUpdate", function()
 		funnelTickElapsed = funnelTickElapsed + arg1
 		if funnelTickElapsed >= 1 then  -- 1 second per tick
 			funnelTickElapsed = funnelTickElapsed - 1
-			if currentStacks > 0 then
-				ActivateOrRefreshUP(currentStacks)
-			end
+			ActivateOrRefreshUP(currentStacks)
 		end
 	end
 end)
