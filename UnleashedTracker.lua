@@ -1,6 +1,21 @@
 local _, class = UnitClass("player")
 if class ~= "WARLOCK" then return end
 
+--------------------------------------------------
+--  STATE
+--------------------------------------------------
+local playerName    = UnitName("player")
+local currentStacks = 0
+local upTimer       = 0
+local upDuration    = 20
+local timerActive   = false
+
+local checkTimer 	= 0
+local funnelActive = false      -- true while channeling Health Funnel
+local funnelTickElapsed = 0     -- time accumulator for 1s simulated ticks
+
+local iconLocked = false
+
 -- Function to check if Unleashed Potential is talented
 local function HasUnleashedPotential()
     local numTabs = GetNumTalentTabs()
@@ -17,24 +32,6 @@ local function HasUnleashedPotential()
 end
 
 --------------------------------------------------
---  STATE
---------------------------------------------------
--- Declare a table for saved data
-UnleashedPotentialDB = UnleashedPotentialDB or {}
-
-local playerName    = UnitName("player")
-local currentStacks = 0
-local upTimer       = 0
-local upDuration    = 20
-local timerActive   = false
-
-local checkTimer 	= 0
-local funnelActive = false      -- true while channeling Health Funnel
-local funnelTickElapsed = 0     -- time accumulator for 1s simulated ticks
-
-local iconLocked = UnleashedPotentialDB.iconLocked or false
-
---------------------------------------------------
 --  DISPLAY FRAME (UI)
 --------------------------------------------------
 local warningFrame = CreateFrame("Button", "UPWarningFrame", UIParent)
@@ -46,7 +43,6 @@ local icon = warningFrame:CreateTexture(nil, "OVERLAY")
 icon:SetAllPoints(warningFrame)
 icon:SetTexture("Interface\\Icons\\Ability_Warlock_DemonicPower") -- UP icon
 icon:SetDesaturated(true)
-icon:Hide()
 
 -- 🔹 Stack text (above icon)
 local stackText = warningFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
@@ -99,15 +95,20 @@ end
 -- Function to save frame's data
 local function Save()
     local point, _, relativePoint, xOfs, yOfs = warningFrame:GetPoint()
+	local size = warningFrame:GetWidth()
     UnleashedPotentialDB.point = point
     UnleashedPotentialDB.relativePoint = relativePoint
     UnleashedPotentialDB.xOfs = xOfs
     UnleashedPotentialDB.yOfs = yOfs
 	UnleashedPotentialDB.iconLocked = iconLocked
+	UnleashedPotentialDB.size = size
 end
 
 -- Function to load frame's data
 local function Load()
+	-- Declare a table for saved data
+	UnleashedPotentialDB = UnleashedPotentialDB or {}
+	
     if UnleashedPotentialDB.point then
         warningFrame:ClearAllPoints()
         warningFrame:SetPoint(
@@ -121,10 +122,17 @@ local function Load()
         warningFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
     end
 	
-	local size = UnleashedPotentialDB.size or 40
-	local fontSize = UnleashedPotentialDB.size or 16
-	warningFrame:SetWidth(size)
-	warningFrame:SetHeight(size)
+	if UnleashedPotentialDB.size then
+		warningFrame:SetWidth(UnleashedPotentialDB.size)
+		warningFrame:SetHeight(UnleashedPotentialDB.size)
+		stackText:SetFont("Fonts\\FRIZQT__.TTF", math.floor(16 * UnleashedPotentialDB.size / 40)+2, "THICKOUTLINE")
+		timerText:SetFont("Fonts\\FRIZQT__.TTF", math.floor(16 * UnleashedPotentialDB.size / 40), "THICKOUTLINE")
+	else
+		warningFrame:SetWidth(40)
+		warningFrame:SetHeight(40)
+		stackText:SetFont("Fonts\\FRIZQT__.TTF", 18, "THICKOUTLINE")
+		timerText:SetFont("Fonts\\FRIZQT__.TTF", 16, "THICKOUTLINE")
+	end
 	
 	iconLocked = UnleashedPotentialDB.iconLocked or false
 	warningFrame:EnableMouse(not iconLocked)
@@ -167,10 +175,8 @@ warningFrame:SetScript("OnMouseWheel", function()
 		
 		stackText:SetFont("Fonts\\FRIZQT__.TTF", fontSize+2, "THICKOUTLINE")
 		timerText:SetFont("Fonts\\FRIZQT__.TTF", fontSize, "THICKOUTLINE")
-
-        -- Save to DB
-        UnleashedPotentialDB.size = newSize
     end
+	Save()
 end)
 
 SLASH_LOCKUP1 = "/unleashed"
