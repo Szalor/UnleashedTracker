@@ -37,6 +37,7 @@ end
 local warningFrame = CreateFrame("Button", "UPWarningFrame", UIParent)
 warningFrame:SetPoint("CENTER", UIParent, "CENTER")
 warningFrame:SetFrameStrata("HIGH")
+warningFrame:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 
 -- 🔹 Icon
 local icon = warningFrame:CreateTexture(nil, "OVERLAY")
@@ -138,16 +139,13 @@ local function Load()
 	warningFrame:EnableMouse(not iconLocked)
 	warningFrame:SetMovable(not iconLocked)		
 	warningFrame:EnableMouseWheel(not iconLocked)
+	
+	UpdateDisplay()
 end
 
 --------------------------------------------------
 --  MOVEMENT / SLASH CMD
 --------------------------------------------------
-warningFrame:SetMovable(true)
-warningFrame:EnableMouse(true)
-warningFrame:RegisterForClicks("LeftButtonUp", "RightButtonUp")
-warningFrame:EnableMouseWheel(true)
-
 warningFrame:SetScript("OnMouseDown", function()
     if IsShiftKeyDown() then
         warningFrame:StartMoving()
@@ -228,8 +226,8 @@ local function CheckFunnel()
 
     local funnelFound = false
     for i = 1, 32 do
-        local texture = UnitBuff("pet", i)
-        if texture and (string.find(texture, "Spell_Shadow_LifeDrain") or string.find(texture, "Spell_Shadow_UnsummonBuilding")) then
+        local _,_,texture = UnitBuff("pet", i)
+        if texture and texture == 11695 or texture == 45911 then
             funnelFound = true
             break
         end
