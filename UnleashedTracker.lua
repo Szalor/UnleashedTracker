@@ -226,8 +226,8 @@ local function CheckFunnel()
 
     local funnelFound = false
     for i = 1, 32 do
-        local _,_,texture = UnitBuff("pet", i)
-        if texture and texture == 11695 or texture == 45911 then
+        local _,_,idFunnel = UnitBuff("pet", i)
+        if idFunnel and idFunnel==11695 or idFunnel==11694 or idFunnel==11693 or idFunnel==3700 or idFunnel==3699 or idFunnel==3698 or idFunnel==755 or idFunnel==45911 or idFunnel==45910 then
             funnelFound = true
             break
         end
